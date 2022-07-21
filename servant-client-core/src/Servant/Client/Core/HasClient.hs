@@ -46,6 +46,7 @@ import           Data.List
 import           Data.Sequence
                  (fromList)
 import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as T
 import           Network.HTTP.Media
                  (MediaType, matches, parseAccept)
 import qualified Network.HTTP.Media as Media
@@ -80,7 +81,7 @@ import           Servant.API
                  ReflectMethod (..), RemoteHost, ReqBody', SBoolI, Stream,
                  StreamBody', Summary, ToHttpApiData, ToSourceIO (..), Vault,
                  Verb, WithNamedContext, WithStatus (..), contentType, getHeadersHList,
-                 getResponse, toEncodedUrlPiece, toUrlPiece, NamedRoutes)
+                 getResponse, toEncodedUrlPiece, toUrlPiece, NamedRoutes, toQueryParam)
 import           Servant.API.Generic
                  (GenericMode(..), ToServant, ToServantApi
                  , GenericServant, toServant, fromServant)
@@ -580,7 +581,8 @@ instance (KnownSymbol sym, ToHttpApiData a, HasClient m api, SBoolI (FoldRequire
     hoistClientMonad pm (Proxy :: Proxy api) f (cl arg)
 
 encodeQueryParam :: ToHttpApiData a => a  -> BS.ByteString
-encodeQueryParam = BL.toStrict . toLazyByteString . toEncodedUrlPiece
+encodeQueryParam = BL.toStrict . toLazyByteString . H.urlEncodeBuilder True
+  . T.encodeUtf8 . toQueryParam
 
 -- | If you use a 'QueryParams' in one of your endpoints in your API,
 -- the corresponding querying function will automatically take
